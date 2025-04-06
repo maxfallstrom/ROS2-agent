@@ -1,18 +1,12 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
-from typing import Optional, Dict
 from app.state_manager import load_state, save_state, clear_state
-from  uuid import UUID
 from agent.graph_agent import robot_agent
-from app.dto import convert_to_dto
+from app.responses.prompt_response import convert_to_response
+from app.responses.action_response import convert_to_action_response
+from requests.prompt_request import PromptRequest
+from requests.action_request import ActionRequest
 
 router = APIRouter()
-
-class PromptRequest(BaseModel):
-    user_id: UUID
-    session_id: UUID
-    prompt: str
-    metadata: Optional[Dict] = None
 
 @router.post("/prompt")
 async def handle_prompt(request: PromptRequest):
@@ -31,11 +25,11 @@ async def handle_prompt(request: PromptRequest):
 
     save_state(request.session_id, state)
 
-    return convert_to_dto(state)
+    return convert_to_response(state)
 
 @router.post("/followup")
 async def handle_followup(request: PromptRequest):
-    state = load_state(str(request.session_id))
+    state = load_state(request.session_id)
 
     messages = state.get("messages", [])
     messages.append({"role": "user", "content": request.prompt})
@@ -45,6 +39,20 @@ async def handle_followup(request: PromptRequest):
     async for output in result:
         state.update(output)
 
-    save_state(str(request.session_id), state)
+    save_state(request.session_id, state)
 
-    return convert_to_dto(state)
+    return convert_to_response(state)
+
+@router.post("/action")
+async def handle_action(request: ActionRequest):
+    state = load_state(request.session_id)
+    state["selected_robot"] = request.selected_robot
+    state["action_prompt"] = request.action_prompt
+
+    result = await robot_agent.astream(state)
+    async for output in result:
+        state.update(output)
+
+    save_state(request.session_id, state)
+
+    return convert_to_action_response(state)

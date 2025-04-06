@@ -8,7 +8,7 @@ class PromptResponse(BaseModel):
     missing_fields: Optional[List[str]] = None
 
 
-def convert_to_dto(state: Dict) -> PromptResponse:
+def convert_to_response(state: Dict) -> PromptResponse:
     return PromptResponse(
         status="complete",
         messages=state.get("messages", []),

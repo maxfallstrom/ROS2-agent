@@ -1,7 +1,6 @@
 from state import AgentState
 
 def format_response(state: AgentState):
-    print("[Node] format_response called")
 
     matches = state.get("robot_matches", [])
 
@@ -13,7 +12,7 @@ def format_response(state: AgentState):
 
     robot_summaries = []
     for robot in matches:
-        summary = f"{robot['name']} (SDK: {robot['sdk']}, Max Payload: {robot.get('max_payload', '?')}kg)"
+        summary = f"{robot['name']} (SDK: {robot['sdk']}, Max Payload: {robot.get('max_payload')}kg)"
         robot_summaries.append(summary)
 
     message = {
