@@ -1,0 +1,10 @@
+openai>=1.0.0
+supabase>=1.0.0
+python-dotenv>=1.0.0
+robot_descriptions>=1.16.0
+dotenv
+langgraph
+langchain_openai
+langchain_core
+fastapi
+pandas
