@@ -2,26 +2,6 @@ from openai import OpenAI
 from yourdfpy import URDF, Robot
 from robot_descriptions.loaders.yourdfpy import load_robot_description
 
-def summarize_urdf(urdf: dict) -> str:
-    name = urdf.get("name", "Unnamed robot")
-    total_mass = urdf.get("total_mass", 0)
-    num_links = urdf.get("num_links", 0)
-    num_joints = urdf.get("num_joints", 0)
-
-    link_names = [link["name"] for link in urdf.get("links", [])]
-    joint_types = [joint["type"] for joint in urdf.get("joints", [])]
-
-    summary = f"""
-    Robot: {name}
-    - Total mass: {total_mass} kg
-    - {num_links} links ({', '.join(link_names[:4])}...)
-    - {num_joints} joints (types: {', '.join(set(joint_types))})
-    - Contains visual: {any(link.get('has_visual') for link in urdf.get('links', []))}
-    - Contains collision: {any(link.get('has_collision') for link in urdf.get('links', []))}
-    """.strip()
-
-    return summary
-
 client = OpenAI()
 
 def generate_tags(summary: str) -> list:
