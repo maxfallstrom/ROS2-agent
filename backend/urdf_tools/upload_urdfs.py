@@ -13,7 +13,7 @@ load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-OPENAI_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_KEY = os.getenv("OPENAI_KEY")
 openai_client = OpenAI(api_key=OPENAI_KEY)
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -35,9 +35,9 @@ async def upload_robot(row: dict):
     described_robot = generate_description(summary, row)
     tags = generate_tags(described_robot)
     embedding = embed_summary(described_robot)
-    robot_id = uuid.uuid4()
+    robot_id = str(uuid.uuid4())
 
-    urdf_result = await add_db_row(robot_id, summary, row, tags)
+    urdf_result = await add_db_row(robot_id, summary, row, tags, described_robot)
 
     if urdf_result.error:
         raise Exception(f"Error uploading URDF: {urdf_result.error}")
@@ -50,13 +50,13 @@ async def upload_robot(row: dict):
     print(f"Uploaded {robot_name} (id: {robot_id})")
 
 
-async def add_vector_row(robot_id: uuid, embedding: List[float]):
+async def add_vector_row(robot_id: str, embedding: List[float]):
     return await supabase.table("urdf_embeddings").insert({
         "id": robot_id,
         "embedding": embedding
     }).execute()
 
-async def add_db_row(robot_id: uuid, summary: dict, row: dict, tags: list):
+async def add_db_row(robot_id: str, summary: dict, row: dict, tags: list, decribed_robot: str):
     return await supabase.table("urdf").insert({
         "id": robot_id,
         "name": row["Robot"],
@@ -65,14 +65,14 @@ async def add_db_row(robot_id: uuid, summary: dict, row: dict, tags: list):
         "dof": summary["dof"] if summary["dof"] != 0 else row["DOF"],
         "total_mass": summary["total_mass"],
         "has_manipulator": summary["has_manipulator"],
-        "num_manipulator": summary["num_manipulators"],
+        "num_manipulators": summary["num_manipulators"],
         "manipulators": summary["manipulator_names"],
         "links": summary["links"],
         "joints": summary["joints"],
         "num_joints": summary["total_joints"],
         "num_links": summary["total_links"],
         "tags": tags,
-        "summary": summary,
+        "summary": decribed_robot,
         "urdf_uri": ""
     }).execute()
 
