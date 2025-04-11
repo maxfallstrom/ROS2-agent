@@ -2,36 +2,55 @@ from openai import OpenAI
 from yourdfpy import URDF, Robot
 from robot_descriptions.loaders.yourdfpy import load_robot_description
 from urdf_tools.helpers.urdf_helpers import try_float
+import json
+from typing import List
 
 client = OpenAI()
 
-def generate_tags(summary: str) -> list:
+def generate_tags(summary: str) -> List[str]:
     prompt = (
         "Given the following description of a robot, extract 3–6 relevant domain tags. "
         "Tags should describe the environments or applications this robot is likely used in. "
-        "Use lowercase, one-word or hyphenated tags like: agriculture, warehouse, drone-inspection, home, education, heavy-lifting, etc.\n\n"
-        f"Robot description:\n{summary}\n\n"
-        "Tags (as a Python list of strings):"
-        "Do not return anything else at all, just a string like ['agriculture', 'warehouse'] and if you cannot come up with anything just return empty brackets []"
+        "Use lowercase, one-word or hyphenated tags like: agriculture, warehouse, drone-inspection, home, education, heavy-lifting, etc."
     )
 
     response = client.responses.create(
         model="gpt-4o-mini",
-        input=prompt,
+        input=[
+            {"role": "system", "content": "You are an expert in structured data extraction."},
+            {"role": "user", "content": f"{prompt}\n\nRobot description:\n{summary}"}
+        ],
+        text={
+            "format": {
+                "type": "json_schema",
+                "name": "extract_robot_tags",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "tags": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                        }
+                    },
+                    "required": ["tags"],
+                    "additionalProperties": False
+                },
+                "strict": True
+            }
+        },
         temperature=0.3
     )
 
-    tag_string = response.output[0].content[0].text.strip()
-
-    return tag_string
+    tags = response.output_text
+    return json.loads(tags)["tags"]
 
 def generate_description(summary: dict, row: dict):
     prompt = (
         "You are a robotics expert, and specialize in giving descriptions on robots given a robot and it's properties"
         "Given the following robot, describe it and what it might be useful for in 100 words"
-        f"Robot name:\n{row["Robot"]}\n"
-        f"Robot maker:\n{row["Maker"]}\n"
-        f"Robot Type:\n{row["Type"]}\n"
+        f"Robot name:\n{row['Robot']}\n"
+        f"Robot maker:\n{row['Maker']}\n"
+        f"Robot Type:\n{row['Type']}\n"
         f"Robot description:\n{summary}\n"
     )
 
@@ -41,7 +60,7 @@ def generate_description(summary: dict, row: dict):
         temperature=0.3
     )
 
-    description = response.output[0].content[0].text.strip()
+    description = response.output_text
 
     return description
 
@@ -138,7 +157,7 @@ def extract_links(robot: Robot):
         links.append({
             "name": link.name,
             "mass": mass,
-            "inertia": inertia,
+            #"inertia": inertia,
             "has_visual": bool(link.visuals),
             "has_collision": bool(link.collisions),
         })
