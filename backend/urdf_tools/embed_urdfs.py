@@ -5,7 +5,7 @@ from openai import OpenAI
 client = OpenAI()
 
 def embed_all_robots():
-    robots = supabase.table("urdf_metadata").select("*").execute().data
+    robots = supabase.table("urdf_embedding").select("*").execute().data
 
     for robot in robots:
         if robot.get("embedding"):
@@ -20,7 +20,7 @@ def embed_all_robots():
 
         embedding = response.data[0].embedding
 
-        supabase.table("urdf_metadata").update({
+        supabase.table("urdf_embedding").update({
             "embedding": embedding
         }).eq("id", robot["id"]).execute()
 
