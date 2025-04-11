@@ -4,8 +4,10 @@ from robot_descriptions.loaders.yourdfpy import load_robot_description
 from urdf_tools.helpers.urdf_helpers import try_float
 import json
 from typing import List
+import os
 
-client = OpenAI()
+OPENAI_KEY = os.getenv("OPENAI_KEY")
+client = OpenAI(api_key=OPENAI_KEY)
 
 def generate_tags(summary: str) -> List[str]:
     prompt = (

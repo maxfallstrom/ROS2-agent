@@ -1,0 +1,6 @@
+backend/urdf_tools/__pycache__/__init__.cpython-311.pyc
+backend/urdf_tools/__pycache__/upload_urdfs.cpython-311.pyc
+backend/urdf_tools/__pycache__/urdf_summarizer.cpython-311.pyc
+backend/urdf_tools/helpers/__pycache__/__init__.cpython-311.pyc
+backend/urdf_tools/helpers/__pycache__/urdf_helpers.cpython-311.pyc
+.env
