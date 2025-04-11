@@ -1,6 +1,7 @@
 from openai import OpenAI
 from yourdfpy import URDF, Robot
 from robot_descriptions.loaders.yourdfpy import load_robot_description
+from helpers.urdf_helpers import try_float
 
 client = OpenAI()
 
@@ -89,6 +90,8 @@ def summarize_robot(name: str):
         "name": urdf.name,
         "total_links": len(urdf.links),
         "total_joints": len(urdf.joints),
+        "links": [],
+        "joints": [],
         "dof": len(robot.actuated_joint_names),
         "has_manipulator": False,
         "num_manipulators": 0,
@@ -96,9 +99,69 @@ def summarize_robot(name: str):
         "total_mass_estimate": sum((link.inertial.mass if link.inertial and link.inertial.mass else 0.0) for link in urdf.links),
     }
 
+    joints = extract_joints(urdf)
+    links = extract_links(urdf)
+    summary["joints"] = joints
+    summary["links"] = links
+
     manipulator_chains = get_manipulator_chains(urdf)
     summary["num_manipulators"] = len(manipulator_chains)
     summary["has_manipulator"] = len(manipulator_chains) > 0
     summary["manipulator_names"] = [chain[-1].child for chain in manipulator_chains]
 
     return summary
+
+def extract_links(urdf: Robot):
+    links = []
+    for link in urdf.links:
+        inertial = link.inertial
+        mass = inertial.mass if inertial and inertial.mass else 0.0
+        inertia = {
+            "ixx": 0, "ixy": 0, "ixz": 0,
+            "iyx": 0, "iyy": 0, "iyz": 0,
+            "izx": 0, "izy": 0, "izz": 0,
+        }
+
+        if inertial and inertial.inertia:
+            inertia = {
+                "ixx": try_float(inertial.inertia[0][0]),
+                "ixy": try_float(inertial.inertia[0][1]),
+                "ixz": try_float(inertial.inertia[0][2]),
+                "iyx": try_float(inertial.inertia[1][0]),
+                "iyy": try_float(inertial.inertia[1][1]),
+                "iyz": try_float(inertial.inertia[1][2]),
+                "izx": try_float(inertial.inertia[2][0]),
+                "izy": try_float(inertial.inertia[2][1]),
+                "izz": try_float(inertial.inertia[2][2])
+            }
+
+        links.append({
+            "name": link.name,
+            "mass": mass,
+            "inertia": inertia,
+            "has_visual": bool(link.visuals),
+            "has_collision": bool(link.collisions),
+        })
+    return links
+
+def extract_joints(urdf: Robot):
+    joints = []
+    for joint in urdf.joints:
+        joint_data = {
+            "name": joint.name,
+            "type": joint.type,
+            "parent": joint.parent,
+            "child": joint.child,
+        }
+        if joint.limit:
+            joint_data["limits"] = {
+                "lower": joint.limit.lower or 0,
+                "upper": joint.limit.upper or 0,
+                "effort": joint.limit.effort or 0,
+                "velocity": joint.limit.velocity or 0,
+            }
+        joints.append(joint_data)
+    return joints
+
+
+
