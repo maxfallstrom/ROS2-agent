@@ -1,7 +1,7 @@
 from openai import OpenAI
 from yourdfpy import URDF, Robot
 from robot_descriptions.loaders.yourdfpy import load_robot_description
-from helpers.urdf_helpers import try_float
+from urdf_tools.helpers.urdf_helpers import try_float
 
 client = OpenAI()
 
@@ -96,7 +96,7 @@ def summarize_robot(name: str):
         "has_manipulator": False,
         "num_manipulators": 0,
         "manipulator_names": [],
-        "total_mass": sum((link.inertial.mass if link.inertial and link.inertial.mass else 0.0) for link in urdf.links),
+        "total_mass": sum((link.inertial.mass if link.inertial and link.inertial.mass else 0.0) for link in robot.links),
     }
 
     joints = extract_joints(robot)
@@ -122,7 +122,7 @@ def extract_links(robot: Robot):
             "izx": 0, "izy": 0, "izz": 0,
         }
 
-        if inertial and inertial.inertia:
+        if inertial and inertial.inertia.any():
             inertia = {
                 "ixx": try_float(inertial.inertia[0][0]),
                 "ixy": try_float(inertial.inertia[0][1]),
