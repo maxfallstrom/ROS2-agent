@@ -47,18 +47,18 @@ def generate_description(summary: dict, row: dict):
 
 
 
-def find_leaf_links(urdf: Robot):
+def find_leaf_links(robot: Robot):
     """Find all links that are not parent to any joint (end effectors)."""
-    child_links = {joint.child for joint in urdf.joints}
-    parent_links = {joint.parent for joint in urdf.joints}
+    child_links = {joint.child for joint in robot.joints}
+    parent_links = {joint.parent for joint in robot.joints}
     return list(child_links - parent_links)
 
-def trace_chain_to_base(urdf: Robot, end_link_name: str):
+def trace_chain_to_base(robot: Robot, end_link_name: str):
     """Trace the kinematic chain from a leaf back to the root."""
     chain = []
     current_link = end_link_name
     while True:
-        for joint in urdf.joints:
+        for joint in robot.joints:
             if joint.child == current_link:
                 chain.insert(0, joint)
                 current_link = joint.parent
@@ -73,47 +73,47 @@ def is_probable_manipulator(chain: list):
     end_effector_name = chain[-1].child if chain else ""
     return num_dof >= 4 or any(key in end_effector_name.lower() for key in ["hand", "gripper", "tool"])
 
-def get_manipulator_chains(urdf: Robot):
+def get_manipulator_chains(robot: Robot):
     """Return all detected manipulator joint chains."""
-    leaf_links = find_leaf_links(urdf)
+    leaf_links = find_leaf_links(robot)
     manipulators = []
     for leaf in leaf_links:
-        chain = trace_chain_to_base(urdf, leaf)
+        chain = trace_chain_to_base(robot, leaf)
         if is_probable_manipulator(chain):
             manipulators.append(chain)
     return manipulators
 
 def summarize_robot(name: str):
-    robot = load_robot_description(name)
-    urdf = robot.robot
+    urdf = load_robot_description(name)
+    robot = urdf.robot
     summary = {
-        "name": urdf.name,
-        "total_links": len(urdf.links),
-        "total_joints": len(urdf.joints),
+        "name": robot.name,
+        "total_links": len(robot.links),
+        "total_joints": len(robot.joints),
         "links": [],
         "joints": [],
-        "dof": len(robot.actuated_joint_names),
+        "dof": len(urdf.actuated_joint_names),
         "has_manipulator": False,
         "num_manipulators": 0,
         "manipulator_names": [],
         "total_mass_estimate": sum((link.inertial.mass if link.inertial and link.inertial.mass else 0.0) for link in urdf.links),
     }
 
-    joints = extract_joints(urdf)
-    links = extract_links(urdf)
+    joints = extract_joints(robot)
+    links = extract_links(robot)
     summary["joints"] = joints
     summary["links"] = links
 
-    manipulator_chains = get_manipulator_chains(urdf)
+    manipulator_chains = get_manipulator_chains(robot)
     summary["num_manipulators"] = len(manipulator_chains)
     summary["has_manipulator"] = len(manipulator_chains) > 0
     summary["manipulator_names"] = [chain[-1].child for chain in manipulator_chains]
 
     return summary
 
-def extract_links(urdf: Robot):
+def extract_links(robot: Robot):
     links = []
-    for link in urdf.links:
+    for link in robot.links:
         inertial = link.inertial
         mass = inertial.mass if inertial and inertial.mass else 0.0
         inertia = {
@@ -144,9 +144,9 @@ def extract_links(urdf: Robot):
         })
     return links
 
-def extract_joints(urdf: Robot):
+def extract_joints(robot: Robot):
     joints = []
-    for joint in urdf.joints:
+    for joint in robot.joints:
         joint_data = {
             "name": joint.name,
             "type": joint.type,
