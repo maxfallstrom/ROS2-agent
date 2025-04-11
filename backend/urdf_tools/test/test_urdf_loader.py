@@ -12,7 +12,9 @@ import json
 
 def test_urdf_summarizer():
     # Just testing Baxter for now
-    return summarize_robot("baxter_description")
+    return summarize_robot("elf2_description")
 
 print(json.dumps(test_urdf_summarizer(), indent=2))
+
+
 
