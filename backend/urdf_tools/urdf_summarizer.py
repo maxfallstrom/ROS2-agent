@@ -96,7 +96,7 @@ def summarize_robot(name: str):
         "has_manipulator": False,
         "num_manipulators": 0,
         "manipulator_names": [],
-        "total_mass_estimate": sum((link.inertial.mass if link.inertial and link.inertial.mass else 0.0) for link in urdf.links),
+        "total_mass": sum((link.inertial.mass if link.inertial and link.inertial.mass else 0.0) for link in urdf.links),
     }
 
     joints = extract_joints(robot)
