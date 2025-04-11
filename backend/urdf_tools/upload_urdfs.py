@@ -39,29 +39,28 @@ async def upload_robot_folder_to_bucket(robot_name: str, folder_path: str, bucke
 
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
         for path in Path(folder_path).rglob("*"):
-            arcname = path.relative_to(folder_path)
-            zipf.write(path, arcname)
+            if path.is_file():
+                arcname = path.relative_to(folder_path)
+                zipf.write(path, arcname)
 
-    zip_buffer.seek(0)
+    zip_data = zip_buffer.getvalue()
 
     object_path = f"{robot_name}.zip"
 
     response = await supabase.storage.from_(bucket_name).upload(
         path=object_path,
-        file=zip_buffer,
-        file_options={"content-type": "application/zip"},
-        upsert=True
+        file=zip_data,
+        file_options={"content-type": "application/zip", "upsert": True}
     )
 
     if hasattr(response, "error") and response.error:
         raise Exception(f"Upload failed for {robot_name}: {response.error}")
 
-    print(f"Uploaded folder: {robot_name}.zip to bucket {bucket_name}")
+    print(f"Uploaded ZIP: {object_path} to bucket '{bucket_name}'")
     return object_path
 
 
-async def upload_robot_image(image_path: str, robot_name: str):
-    
+async def upload_robot_image(image_path: str, robot_name: str) -> str | None:
     if not os.path.exists(image_path):
         print(f"Image not found for {robot_name}, skipping image upload.")
         return None
@@ -71,18 +70,19 @@ async def upload_robot_image(image_path: str, robot_name: str):
     with open(image_path, "rb") as f:
         data = f.read()
 
-    response = supabase.storage.from_("robotpicturesbucket").upload(
+    response = await supabase.storage.from_("robotpicturesbucket").upload(
         path=supabase_path,
         file=data,
         file_options={"content-type": "image/png", "upsert": True}
     )
 
-    if response.get("error"):
-        print(f"Error uploading image: {response['error']}")
+    if hasattr(response, "error") and response.error:
+        print(f"Error uploading image for {robot_name}: {response.error}")
         return None
 
-    url = f"{SUPABASE_URL}/storage/v1/object/public/robotpicturesbucket/{supabase_path}"
-    return url
+    public_url = f"{SUPABASE_URL}/storage/v1/object/public/robotpicturesbucket/{supabase_path}"
+    print(f"Uploaded image for {robot_name} to {public_url}")
+    return public_url
 
 
 async def upload_robot(row: dict):
