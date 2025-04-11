@@ -1,5 +1,5 @@
 from urdf_tools.supabase_client import supabase
-from urdf_tools.urdf_summarizer import summarize_urdf
+from urdf_tools.urdf_summarizer import summarize_robot
 from openai import OpenAI
 
 client = OpenAI()
@@ -11,7 +11,7 @@ def embed_all_robots():
         if robot.get("embedding"):
             continue
 
-        summary = summarize_urdf(robot)
+        summary = summarize_robot(robot)
 
         response = client.embeddings.create(
             input=summary,
