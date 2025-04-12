@@ -1,7 +1,7 @@
 from typing import List, Dict
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-from api_keys import OPENAI_KEY
+from agent.helpers.api_keys import OPENAI_KEY
 
 llm = ChatOpenAI(api_key=OPENAI_KEY, temperature=0)
 

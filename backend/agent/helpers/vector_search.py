@@ -1,5 +1,5 @@
 from openai import OpenAI
-from api_keys import OPENAI_KEY, SUPABASE_KEY, SUPABASE_URL
+from agent.helpers.api_keys import OPENAI_KEY, SUPABASE_KEY, SUPABASE_URL
 from supabase import create_client
 
 llm = OpenAI(api_key=OPENAI_KEY)

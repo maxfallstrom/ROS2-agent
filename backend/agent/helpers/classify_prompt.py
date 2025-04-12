@@ -4,7 +4,7 @@ from langchain_core.output_parsers import PydanticOutputParser
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from agent.state import AgentState
-from api_keys import OPENAI_KEY
+from agent.helpers.api_keys import OPENAI_KEY
 
 class PromptClassification(BaseModel):
     status: Literal["complete", "incomplete"]

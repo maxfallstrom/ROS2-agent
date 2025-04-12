@@ -1,5 +1,5 @@
-from state import AgentState
-from helpers.classify_prompt import classify_prompt, PromptClassification
+from agent.state import AgentState
+from agent.helpers.classify_prompt import classify_prompt, PromptClassification
 
 async def parse_prompt(state: AgentState):
     

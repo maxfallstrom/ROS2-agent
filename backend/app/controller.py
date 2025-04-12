@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from app.state_manager import load_state, save_state
 from agent.graph_agent import robot_agent
 from app.responses.prompt_response import convert_stream_chunk
-from requests.prompt_request import PromptRequest
+from app.requests.prompt_request import PromptRequest
 from fastapi.responses import StreamingResponse
 import json
 from agent.state import AgentState
