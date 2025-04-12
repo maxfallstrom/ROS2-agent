@@ -5,7 +5,7 @@ from supabase import create_client
 llm = OpenAI(api_key=OPENAI_KEY)
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-def search_robots(user_query: str, threshold: float = 0.7):
+def search_robots(user_query: str, threshold: float = 0.3):
     response = llm.embeddings.create(
         input=user_query,
         model="text-embedding-3-small"

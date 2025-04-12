@@ -13,4 +13,4 @@ def load_state(session_id: UUID) -> Dict[str, Any]:
 
 def save_state(session_id: UUID, state: Dict[str, Any]) -> None:
     state["session_id"] = str(session_id)
-    supabase.table("state").upsert(state, on_conflict="session_id").execute()
+    supabase.table("state").update(state).execute()
