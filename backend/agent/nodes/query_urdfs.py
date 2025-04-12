@@ -1,6 +1,7 @@
 from agent.helpers.summarize_chat_history import summarize_context_for_embedding
 from agent.helpers.vector_search import search_robots
 from agent.state import AgentState
+from app.controller import save_state
 
 async def query_urdfs(state: AgentState) -> dict:
     
@@ -22,6 +23,7 @@ async def query_urdfs(state: AgentState) -> dict:
             "role": "assistant",
             "content": "Would you like to learn more about one of them? Also, feel free to explore the robots in the view!"
         })
+        save_state(state["session_id"], state)
         return state
 
     state["matches"] = matches
