@@ -17,6 +17,11 @@ async def handle_prompt(request: PromptRequest):
 
     state.setdefault("messages", [])
 
+    state["messages"].append({
+        "role": "user",
+        "content": request.prompt
+    })
+
     async def event_stream():
         async for output in robot_agent.astream(state):
             state.update(output)

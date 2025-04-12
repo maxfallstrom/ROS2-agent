@@ -31,7 +31,7 @@ def format_collected_info(messages: list[str]) -> str:
 
 
 async def classify_prompt(state: AgentState):
-    user_input = state["input"]
+    user_input = state["messages"][-1]["content"]
     messages = state.get("messages", [])
     collected_info = [msg["content"] for msg in messages if msg.get("role") == "user"]
     collected_info_str = format_collected_info(collected_info)

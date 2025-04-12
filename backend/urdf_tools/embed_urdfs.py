@@ -2,8 +2,9 @@ import time
 from typing import List
 from openai import OpenAI
 from supabase import create_client
-from agent.helpers.api_keys import OPENAI_KEY, SUPABASE_URL, SUPABASE_KEY
+from agent.helpers.api_keys import OPENAI_KEY, SUPABASE_KEY, SUPABASE_URL
 from tqdm import tqdm
+
 
 openai = OpenAI(api_key=OPENAI_KEY)
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
