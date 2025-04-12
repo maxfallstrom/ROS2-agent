@@ -8,7 +8,6 @@ from robot_descriptions.loaders.yourdfpy import load_robot_description
 from urdf_tools.urdf_summarizer import summarize_robot, generate_description, generate_tags
 from typing import List
 import asyncio
-import aiofiles
 import zipfile
 from pathlib import Path
 from io import BytesIO
@@ -34,7 +33,7 @@ def embed_summary(text: str):
     )
     return response.data[0].embedding
 
-async def upload_robot_folder_to_bucket(robot_name: str, folder_path: str, bucket_name: str = "robotbucket") -> str:
+def upload_robot_folder_to_bucket(robot_name: str, folder_path: str, bucket_name: str = "robotbucket") -> str:
     zip_buffer = BytesIO()
 
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
@@ -47,10 +46,10 @@ async def upload_robot_folder_to_bucket(robot_name: str, folder_path: str, bucke
 
     object_path = f"{robot_name}.zip"
 
-    response = await supabase.storage.from_(bucket_name).upload(
+    response = supabase.storage.from_(bucket_name).upload(
         path=object_path,
         file=zip_data,
-        file_options={"content-type": "application/zip", "upsert": True}
+        file_options={"content-type": "application/zip"}
     )
 
     if hasattr(response, "error") and response.error:
@@ -60,7 +59,7 @@ async def upload_robot_folder_to_bucket(robot_name: str, folder_path: str, bucke
     return object_path
 
 
-async def upload_robot_image(image_path: str, robot_name: str) -> str | None:
+def upload_robot_image(image_path: str, robot_name: str) -> str | None:
     if not os.path.exists(image_path):
         print(f"Image not found for {robot_name}, skipping image upload.")
         return None
@@ -70,10 +69,10 @@ async def upload_robot_image(image_path: str, robot_name: str) -> str | None:
     with open(image_path, "rb") as f:
         data = f.read()
 
-    response = await supabase.storage.from_("robotpicturesbucket").upload(
+    response = supabase.storage.from_("robotpicturesbucket").upload(
         path=supabase_path,
         file=data,
-        file_options={"content-type": "image/png", "upsert": True}
+        file_options={"content-type": "image/png"}
     )
 
     if hasattr(response, "error") and response.error:
@@ -96,11 +95,11 @@ async def upload_robot(row: dict):
     robot_id = str(uuid.uuid4())
 
     folder_path = os.path.join("urdf_tools", "robots", robot_name)
-    object_path = await upload_robot_folder_to_bucket(robot_name, folder_path)
+    object_path = upload_robot_folder_to_bucket(robot_name, folder_path)
     urdf_url = f"{SUPABASE_BUCKET_URL}/{object_path}"
 
     image_path = os.path.join("urdf_tools", "robots", "images", f"{robot_name}.png")
-    image_url = await upload_robot_image(image_path, robot_name)
+    image_url = upload_robot_image(image_path, robot_name)
 
     urdf_result = await add_db_row(robot_id, summary, row, tags, described_robot, urdf_url, image_url)
 
