@@ -47,6 +47,7 @@ async def classify_prompt(state: AgentState):
     parsed: PromptClassification = parser.invoke(raw_response)
 
     if len(messages) > 3:
-        parsed["status"] = "complete"
+        fall = PromptClassification(status="complete")
+        return fall
     return parsed
 
