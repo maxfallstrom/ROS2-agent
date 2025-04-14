@@ -23,11 +23,18 @@ async def handle_prompt(request: PromptRequest):
     })
 
     async def event_stream():
-        async for output in robot_agent.astream(state):
-            state.update(output)
-            chunk = convert_stream_chunk(state)
-            yield f"data: {json.dumps(chunk)}\n\n"
+        try:
+            async for output in robot_agent.astream(state):
+                state.update(output)
+                chunk = convert_stream_chunk(state)
+                yield f"data: {json.dumps(chunk)}\n\n"
 
-        save_state(request.session_id, state)
+        except Exception as e:
+            state["error"] = str(e)
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+        finally:
+            save_state(request.session_id, state)
+    
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")
