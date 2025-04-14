@@ -8,3 +8,6 @@ langchain_openai
 langchain_core
 fastapi
 pandas
+uvicorn
+pytest
+pytest-asyncio

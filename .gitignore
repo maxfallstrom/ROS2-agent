@@ -4,3 +4,10 @@ backend/urdf_tools/__pycache__/urdf_summarizer.cpython-311.pyc
 backend/urdf_tools/helpers/__pycache__/__init__.cpython-311.pyc
 backend/urdf_tools/helpers/__pycache__/urdf_helpers.cpython-311.pyc
 .env
+backend/agent/helpers/__pycache__/classify_prompt.cpython-312.pyc
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+*.so
