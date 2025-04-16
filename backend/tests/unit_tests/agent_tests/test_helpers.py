@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, patch
-from agent.helpers.classify_prompt import classify_prompt, PromptClassification
+from agent.helpers.classify_prompt import classify_prompt, PromptClassification, llm, prompt
+from typing import List
 
 @pytest.mark.asyncio
 async def test_classify_prompt_returns_complete_if_many_messages():
@@ -26,8 +27,8 @@ async def test_classify_prompt_returns_incomplete_with_follow_up():
         ]
     }
 
-    with patch("agent.helpers.classify_prompt.prompt.ainvoke", new_callable=AsyncMock) as mock_prompt, \
-         patch("agent.helpers.classify_prompt.llm.ainvoke", new_callable=AsyncMock) as mock_llm, \
+    with patch.object(prompt, "ainvoke", new_callable=AsyncMock) as mock_prompt, \
+         patch.object(llm, "ainvoke", new_callable=AsyncMock) as mock_llm, \
          patch("agent.helpers.classify_prompt.parser.invoke") as mock_parser:
 
         mock_prompt.return_value = {"role": "system", "content": "Prompt generated"}
@@ -38,3 +39,4 @@ async def test_classify_prompt_returns_incomplete_with_follow_up():
 
         assert result.status == "incomplete"
         assert result.question == "What should the robot do?"
+

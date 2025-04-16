@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Literal
+from typing import Literal, List
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
@@ -26,7 +26,7 @@ prompt = ChatPromptTemplate.from_messages([
 
 llm = ChatOpenAI(api_key=OPENAI_KEY, temperature=0)
 
-def format_collected_info(messages: list[str]) -> str:
+def format_collected_info(messages: List[str]) -> str:
     return "\n".join(f"- {msg}" for msg in messages)
 
 
