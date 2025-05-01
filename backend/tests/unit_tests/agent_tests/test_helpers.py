@@ -1,7 +1,38 @@
 import pytest
-from unittest.mock import AsyncMock, patch
-from agent.helpers.classify_prompt import classify_prompt, PromptClassification, llm, prompt
-from typing import List
+from unittest.mock import AsyncMock, patch, Mock
+from agent.helpers.classify_prompt import classify_prompt, PromptClassification
+from langchain_openai import ChatOpenAI
+
+@pytest.mark.asyncio
+async def test_classify_prompt_returns_incomplete_with_follow_up():
+    state = {
+        "messages": [
+            {"role": "user", "content": "Hi"}
+        ]
+    }
+
+    with patch.object(ChatOpenAI, "ainvoke", new_callable=AsyncMock) as mock_llm, \
+         patch("agent.helpers.classify_prompt.get_parser") as mock_get_parser:
+
+        mock_llm.return_value = {
+            "role": "assistant",
+            "content": '{"status": "incomplete", "question": "What should the robot do?"}'
+        }
+
+        fake_parser = Mock()
+        fake_parser.invoke.return_value = PromptClassification(
+            status="incomplete",
+            question="What should the robot do?"
+        )
+        mock_get_parser.return_value = fake_parser
+
+        result = await classify_prompt(state)
+
+        assert isinstance(result, PromptClassification)
+        assert result.status == "incomplete"
+        assert result.question == "What should the robot do?"
+
+
 
 @pytest.mark.asyncio
 async def test_classify_prompt_returns_complete_if_many_messages():
@@ -17,26 +48,4 @@ async def test_classify_prompt_returns_complete_if_many_messages():
 
     result = await classify_prompt(state)
     assert result.status == "complete"
-
-
-@pytest.mark.asyncio
-async def test_classify_prompt_returns_incomplete_with_follow_up():
-    state = {
-        "messages": [
-            {"role": "user", "content": "Hi"}
-        ]
-    }
-
-    with patch.object(prompt, "ainvoke", new_callable=AsyncMock) as mock_prompt, \
-         patch.object(llm, "ainvoke", new_callable=AsyncMock) as mock_llm, \
-         patch("agent.helpers.classify_prompt.parser.invoke") as mock_parser:
-
-        mock_prompt.return_value = {"role": "system", "content": "Prompt generated"}
-        mock_llm.return_value = {"role": "assistant", "content": '{"status": "incomplete", "question": "What should the robot do?"}'}
-        mock_parser.return_value = PromptClassification(status="incomplete", question="What should the robot do?")
-
-        result = await classify_prompt(state)
-
-        assert result.status == "incomplete"
-        assert result.question == "What should the robot do?"
 

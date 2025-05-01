@@ -10,17 +10,27 @@ class PromptClassification(BaseModel):
     status: Literal["complete", "incomplete"]
     question: str = None
 
+# global parser instance
 parser = PydanticOutputParser(pydantic_object=PromptClassification)
 
+def get_parser() -> PydanticOutputParser:
+    """
+    Return the global parser. Tests can patch this to inject a fake parser.
+    """
+    return parser
+
 prompt = ChatPromptTemplate.from_messages([
-    ("system", 
-     "You are a robotics assistant. A user is trying to find a robot for their needs. We need information about the task, environment, and capabilities of the robot.\n"
-     "Here is the latest response:\n{input}\n\n"
-     "Here is the info gathered so far:\n{collected_info_str}\n\n"
-     "Decide if you now have enough info to choose a robot."
-     "If yes, return 'comlete' and no follow-up question is needed."
-     "If not, return 'incomplete' and include a follow-up question to ask."
-     "Respond in JSON format with a `status` and optional a follow up `question`."),
+    (
+        "system",
+        "You are a robotics assistant. A user is trying to find a robot for their needs. "
+        "We need information about the task, environment, and capabilities of the robot.\n"
+        "Here is the latest response:\n{input}\n\n"
+        "Here is the info gathered so far:\n{collected_info_str}\n\n"
+        "Decide if you now have enough info to choose a robot. "
+        "If yes, return 'complete' and no follow-up question is needed. "
+        "If not, return 'incomplete' and include a follow-up question to ask. "
+        "Respond in JSON format with a `status` and optional a follow up `question`."
+    ),
     ("human", "Classify this.")
 ])
 
@@ -29,13 +39,11 @@ llm = ChatOpenAI(api_key=OPENAI_KEY, temperature=0)
 def format_collected_info(messages: List[str]) -> str:
     return "\n".join(f"- {msg}" for msg in messages)
 
-
-async def classify_prompt(state: AgentState):
+async def classify_prompt(state: AgentState) -> PromptClassification:
     user_input = state["messages"][-1]["content"]
     messages = state.get("messages", [])
     collected_info = [msg["content"] for msg in messages if msg.get("role") == "user"]
     collected_info_str = format_collected_info(collected_info)
-
 
     formatted_prompt = await prompt.ainvoke({
         "input": user_input,
@@ -44,10 +52,9 @@ async def classify_prompt(state: AgentState):
 
     raw_response = await llm.ainvoke(formatted_prompt)
 
-    parsed: PromptClassification = parser.invoke(raw_response)
+    parsed: PromptClassification = get_parser().invoke(raw_response)
 
     if len(messages) > 3:
-        fall = PromptClassification(status="complete")
-        return fall
-    return parsed
+        return PromptClassification(status="complete")
 
+    return parsed
